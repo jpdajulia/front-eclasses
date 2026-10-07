@@ -1,40 +1,51 @@
-// BASE_URL aponta para o JSON local enquanto a API não está integrada.
-// Quando a API estiver pronta, basta trocar para: 'http://localhost:3000/api'
-const BASE_URL = 'http://localhost:3000/api';
+// URL da API. Em produção, troque pela URL onde a API foi publicada
+// (ex.: 'https://minha-api.onrender.com/api/').
+const BASE_URL = 'http://localhost:3000/api/';
 
-// Função genérica para requisições GET
-async function getDados(endpoint) {
-    try {
-        const response = await fetch(`${BASE_URL}${endpoint}`);
+// Função central: faz a requisição e devolve o JSON.
+// Se a API responder com erro, lança um Error com a mensagem dela.
+async function request(method, endpoint, body) {
+    const opcoes = { method, headers: {} };
 
-        if (!response.ok) {
-            throw new Error(`HTTP Error: ${response.status} - ${response.statusText}`);
-        }
-
-        const data = await response.json();
-        console.log(`Dados de ${endpoint}:`, data);
-
-        return data;
-
-    } catch (error) {
-        console.error(`Erro ao buscar ${endpoint}:`, error);
-        return [];
+    if (body !== undefined) {
+        opcoes.headers['Content-Type'] = 'application/json';
+        opcoes.body = JSON.stringify(body);
     }
+
+    let response;
+    try {
+        response = await fetch(`${BASE_URL}${endpoint}`, opcoes);
+    } catch (e) {
+        throw new Error('Não foi possível conectar à API. Ela está rodando?');
+    }
+
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+        throw new Error(data.erro || `Erro ${response.status}: ${response.statusText}`);
+    }
+    return data;
 }
 
-// Funções específicas
-async function getJogos() {
-    return await getDados('/jogos');
-}
+// ---------- GET ----------
+const getJogos = () => request('GET', 'jogos');
+const getTimes = () => request('GET', 'times');
+const getCompetidores = () => request('GET', 'competidores');
+const getConfrontos = () => request('GET', 'confrontos');
 
-async function getTimes() {
-    return await getDados('/times');
-}
+// ---------- POST ----------
+const criarJogo = (dados) => request('POST', 'jogos', dados);
+const criarTime = (dados) => request('POST', 'times', dados);
+const criarCompetidor = (dados) => request('POST', 'competidores', dados);
+const criarConfronto = (dados) => request('POST', 'confrontos', dados);
 
-async function getCompetidores() {
-    return await getDados('/competidores');
-}
+// ---------- PUT ----------
+const atualizarJogo = (id, dados) => request('PUT', `jogos/${id}`, dados);
+const atualizarTime = (id, dados) => request('PUT', `times/${id}`, dados);
+const atualizarCompetidor = (id, dados) => request('PUT', `competidores/${id}`, dados);
+const atualizarConfronto = (id, dados) => request('PUT', `confrontos/${id}`, dados);
 
-async function getConfrontos() {
-    return await getDados('/confrontos');
-}
+// ---------- DELETE ----------
+const deletarJogo = (id) => request('DELETE', `jogos/${id}`);
+const deletarTime = (id) => request('DELETE', `times/${id}`);
+const deletarCompetidor = (id) => request('DELETE', `competidores/${id}`);
+const deletarConfronto = (id) => request('DELETE', `confrontos/${id}`);
