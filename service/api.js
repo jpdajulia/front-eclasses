@@ -21,7 +21,7 @@ async function request(method, endpoint, body) {
 
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
-        throw new Error(data.erro || `Erro ${response.status}: ${response.statusText}`);
+        throw new Error([data.erro, data.detalhe, data.dica].filter(Boolean).join(' | ') || `Erro ${response.status}: ${response.statusText}`);
     }
     return data;
 }
